@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--[if lt IE 9]>
+          <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>InfraccionesYa client example</title>
+
+        <!-- include jQuery -->
+        <script src="jquery-3.1.1.min.js"></script>
+        <!-- include leaflet -->
+        <link rel="stylesheet" href="./leaflet/leaflet.css" />
+        <script src="./leaflet/leaflet.js"></script>
+
+        <!-- include client -->
+        <!-- <link rel="stylesheet" type="text/css" media="screen" href="view.css" /> -->
+        <link rel="stylesheet" type="text/css" media="screen" href="BuscarInfraccion.css" />
+        <script src="config.js"></script>
+        <script src="mapCreation.js"></script>
+        <script src="drawer.js"></script>
+        <script src="Buscarinfraccion.js"></script>
+    </head>
+
+    <body>
+        <div id = "partTop">
+            <form method="POST" action="http://miservidor/cgi-bin/test2-cgi">
+                <p>Ingrese la patente</p>
+    	        <input type="text" name="patente">
+    	        <P>
+    	        <input type="button" value="Buscar infraccion" Onclick="buscarInfraccion(patente.value)">
+    		</form>
+        </div>
+		
+		<div id="tInfracciones"> 
+		</div>
+
+        <div id="mapid"></div>
+		
+    </body>                   
+</html>

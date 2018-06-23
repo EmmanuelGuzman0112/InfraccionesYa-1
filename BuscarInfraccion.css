@@ -1,0 +1,71 @@
+body
+{
+  font-family: Arial;
+}
+
+#mapid
+{
+  background: #CCC;
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+  bottom: 15px;
+
+  width: 60%;
+}
+
+#partTop
+{
+  background: #99A3A4;
+  top: 15px;
+  left: 0px;
+  bottom: 0px;
+
+  height: 100px;
+  width: 39%;
+}
+
+#tInfracciones
+{
+  background: #99A3A4;
+  width: 39%;
+  height: 80%;
+}
+
+#right{
+  position: absolute;
+
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+
+  width: 25%;
+}
+
+#tablaInfracciones
+{
+       table {
+           width:100%;
+       }
+       thead {
+           display: none;
+       }
+       tr:nth-of-type(2n) {
+           background-color: inherit;
+       }
+       tr td:first-child {
+           background: #f0f0f0;
+           font-weight:bold;
+           font-size:1.3em;
+       }
+       tbody td {
+           display: block;
+           text-align:center;
+       }
+       tbody td:before {
+           content: attr(data-th);
+           display: block;
+           text-align:center;
+       }
+}
