@@ -6,7 +6,7 @@
         <![endif]-->
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-        <title>InfraccionesYa client example</title>
+        <title>InfraccionesYa Buscar infraccion</title>
 
         <!-- include jQuery -->
         <script src="jquery-3.1.1.min.js"></script>
@@ -21,19 +21,37 @@
         <script src="mapCreation.js"></script>
         <script src="drawer.js"></script>
         <script src="Buscarinfraccion.js"></script>
+		
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
     </head>
 
     <body>
-        <div id = "partTop">
-            <form method="POST" action="http://miservidor/cgi-bin/test2-cgi">
-                <p>Ingrese la patente</p>
-    	        <input type="text" name="patente">
-    	        <P>
-    	        <input type="button" value="Buscar infraccion" Onclick="buscarInfraccion(patente.value)">
-    		</form>
-        </div>
+		<div id = "left">
+			<div id = "header">
+				<h1>Infracciones</h1>
+							
+				<form class = "form-group" >
+					<label class="col-lg-8 control-label" for="validationDefault01">Busqueda por dominio</label>
+					<input type = "text" class = "form-control" placeholder = "Ej: ABC123" name="patente">
+					<br>
+					<input type="button" class="btn btn-primary" value="Buscar" Onclick="buscarInfraccion(patente.value)">
+				</form>
+			</div>
+			
+			<br>
+			
+			<h4 id="hResultados" >Resultados: </h4>
+			<p id="pNoHayInfraccion" class="text-success"> El dominio patente.value no posee infracciones</p>
 		
-		<div id="tInfracciones"> 
+			<div id="tInfracciones">
+			</div>
+			
+			<br>
+		
+			<h4 id="hDeposito" >Deposito: </h4>
+		
+			<div id="tDepositos">
+			</div>
 		</div>
 
         <div id="mapid"></div>

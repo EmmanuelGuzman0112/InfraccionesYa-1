@@ -1,3 +1,5 @@
+var map;
+
 /******************************************************************************
  * Funciones para request asincrónico utilizando XMLHttpRequest
  */
@@ -24,48 +26,77 @@ var asyncQuery = function(url, callback)
     return ret;
 }
 
+function emptyInfracciones()
+{
+	document.getElementById('tInfracciones').innerHTML= '';
+	document.getElementById('tDepositos').innerHTML= '';
+	document.getElementById('hResultados').style.display = 'none';
+	document.getElementById('hDeposito').style.display = 'none';
+}
+
+function mostrarNoInfracciones()
+{
+	document.getElementById('hResultados').style.display = 'block';
+	document.getElementById('pNoHayInfraccion').style.display = 'block';
+}
+
 function buscarInfraccion(patente)
 {
 	var url = Config.url;
 	var urlInfracciones = '/infracciones/';
 	var urlTiposInfraccion = "/tiposInfraccion/";
+	
+	emptyInfracciones();
 
-	//var map = createMap('mapid');
-    //var drawer = new Drawer();
-
-	//PEDIDO DE INFRACCIONES
-	var callback = function(responseInfracciones)
-	{
-		//PEDIDO DE TIPO DE INFRACCIONES
-		var callback2 = function(responseTiposInfraccion)
+	//PEDIDO DE TIPO DE INFRACCIONES
+	var callback = function(responseTiposInfraccion)
+	{		
+		//PEDIDO DE INFRACCIONES
+		var callback2 = function(responseInfracciones)
 		{
+			//Valido que no haya infracciones para esa patente
+			if(responseInfracciones.infracciones == '')
+			{
+				mostrarNoInfracciones();
+				return;
+			}
+		
 			CrearTInfracciones(responseInfracciones, responseTiposInfraccion);
+			
+			//Hace visible el H1 resultados
+			document.getElementById('hResultados').style.display = 'block';
         }
-        asyncQuery(url + urlTiposInfraccion, callback2);
+        //asyncQuery(url + urlTiposInfraccion, callback2);
+		asyncQuery(url + "/" + patente + urlInfracciones, callback2);
     };
 
-	asyncQuery(url + "/" + patente + urlInfracciones, callback);
+	//asyncQuery(url + "/" + patente + urlInfracciones, callback);
+	asyncQuery(url + urlTiposInfraccion, callback);
 }
 
 function LayoutTipoInfracion(tipoInfraccion, responseTiposInfraccion)
 {
-	var_descripcion = null;
-	$.each(responseTiposInfraccion.tipos, function(i, itemTipo)
-	{
-		if ( tipoInfraccion == itemTipo.id )
-		{
-			var_descripcion = itemTipo.descripcion;
-			return false;
-		}
-	});
-
-	return var_descripcion;
+	return responseTiposInfraccion.tipos[tipoInfraccion].descripcion;
 }
 
-$('#click').click(function (event)
+function mostrarDepositoInfraccion(patente, idInfraccion)
 {
-    alert("Hola Mundo");
-});
+    var url = Config.url;
+	var urlAcarreo = '/acarreos/';
+	var drawer = new Drawer();
+
+	var callback = function(responseAcarreos)
+	{
+		//PEDIDO DEL ACARREO
+		var acarreo = responseAcarreos.acarreo;
+
+		drawer.drawTowTruckInMap(acarreo, map);
+		CrearTDeposito(responseAcarreos.acarreo.deposito);
+		document.getElementById('hDeposito').style.display = 'block';
+    };
+
+	asyncQuery(url + '/' + patente + urlAcarreo + idInfraccion, callback);
+}
 
 function CrearTInfracciones(responseInfracciones, responseTiposInfraccion)
 {
@@ -75,23 +106,11 @@ function CrearTInfracciones(responseInfracciones, responseTiposInfraccion)
 	var tabla   = document.createElement("table");
 	var tblBody = document.createElement("tbody");
 
-	CrearEncabezadoTInfracciones(tblBody);
+	CrearEncabezadoTInfracciones(tabla);
 
 	$.each(responseInfracciones.infracciones, function(i, item)
 	{
 		var fila = document.createElement("tr");
-		
-		var celda = document.createElement("td");
-		celda.innerHTML = item.id;
-		fila.appendChild(celda);
-		
-		var celda1 = document.createElement("td");
-		celda1.innerHTML = item.fechaHoraRegistro;
-		fila.appendChild(celda1);
-		
-		var celda2 = document.createElement("td");
-		celda2.innerHTML = item.fechaHoraActualizacion;
-		fila.appendChild(celda2);
 
 		var celda3 = document.createElement("td");
 		celda3.innerHTML = item.direccionRegistrada;
@@ -104,19 +123,24 @@ function CrearTInfracciones(responseInfracciones, responseTiposInfraccion)
 		var celda5 = document.createElement("td");
 		celda5.innerHTML = item.montoAPagar;
 		fila.appendChild(celda5);
+		
+		var celda1 = document.createElement("td");
+		celda1.innerHTML = item.fechaHoraRegistro;
+		fila.appendChild(celda1);
+		
+		var celda2 = document.createElement("td");
+		celda2.innerHTML = item.fechaHoraActualizacion;
+		fila.appendChild(celda2);
 
-		//VER ESTO
-		/*var celda6 = document.createElement("td");
-		celda6.innerHTML = item.existeAcarreo;
-		fila.appendChild(celda6);*/
-
-		var verInfraccion = document.createElement("a");
-		verInfraccion.innerHTML=item.existeAcarreo;
-		verInfraccion.id = "ver_infra"
-		verInfraccion.href = "#";
-		verInfraccion.onclick = "alert(asd)";
-		fila.appendChild(verInfraccion);
- 
+		if ( item.existeAcarreo )
+		{		
+			var idInfraccion = item.id;
+			var pantente = responseInfracciones.patente;
+			var verInfraccion = document.createElement("button");
+			verInfraccion.innerHTML = 'Ver acarreo'; //DEFINIR MEJOR
+			verInfraccion.onclick = function(){ mostrarDepositoInfraccion(pantente, idInfraccion) };
+			fila.appendChild(verInfraccion);
+		}
 		
 		//Agrega la fila al final de la tabla
 		tblBody.appendChild(fila);
@@ -128,25 +152,14 @@ function CrearTInfracciones(responseInfracciones, responseTiposInfraccion)
 	//Anexa la tabla dentro del elemento
 	body.appendChild(tabla);
 	  
-	//Modifica el atributo "border" de la tabla y lo fija a "2";
-	tabla.setAttribute("border", "1");
+	tabla.setAttribute('class', 'table');
 }
 
-function CrearEncabezadoTInfracciones(tblBody)
+function CrearEncabezadoTInfracciones(tabla)
 {
+	var thead = document.createElement("thead");
+	
 	var encabezado = document.createElement("tr");
-
-	var enc_id = document.createElement("td");
-	enc_id.innerHTML = "ID";
-	encabezado.appendChild(enc_id);
-	
-	var enc_fechaRegistro = document.createElement("td");
-	enc_fechaRegistro.innerHTML = "Fecha de registro";
-	encabezado.appendChild(enc_fechaRegistro);
-	
-	var enc_fechaAct = document.createElement("td");
-	enc_fechaAct.innerHTML = "Fecha de actualizacion";
-	encabezado.appendChild(enc_fechaAct);
 
 	var enc_direccion = document.createElement("td");
 	enc_direccion.innerHTML = "Direccion";
@@ -157,33 +170,88 @@ function CrearEncabezadoTInfracciones(tblBody)
 	encabezado.appendChild(enc_tipoInf);
 
 	var enc_monto = document.createElement("td");
-	enc_monto.innerHTML = "Monto a pagar";
+	enc_monto.innerHTML = "Monto";
 	encabezado.appendChild(enc_monto);
+	
+	var enc_fechaRegistro = document.createElement("td");
+	enc_fechaRegistro.innerHTML = "Fecha de registro";
+	encabezado.appendChild(enc_fechaRegistro);
+	
+	var enc_fechaAct = document.createElement("td");
+	enc_fechaAct.innerHTML = "Fecha de actualizacion";
+	encabezado.appendChild(enc_fechaAct);
 
 	var enc_acarreo = document.createElement("td");
 	enc_acarreo.innerHTML = "Acarreo";
 	encabezado.appendChild(enc_acarreo);
 	
+	thead.appendChild(encabezado);
+	
 	//Agrega la fila al final de la tabla (al final del elemento tblbody)
-	tblBody.appendChild(encabezado);
+	tabla.appendChild(thead);
 }
 
-function mostrarDepositoInfraccion(patente, idInfraccion)
+function CrearEncabezadoTDeposito(tblBody)
 {
-    var url = Config.url;
-	var urlAcarreo = '/acarreos/';
-	var drawer = new Drawer();
-	var map = createMap('mapid');
+	var encaDeposito = document.createElement("tr");
+	
+	var enc_Nombre = document.createElement("td");
+	enc_Nombre.innerHTML = "Nombre";
+	encaDeposito.appendChild(enc_Nombre);
+	
+	var enc_Direccion = document.createElement("td");
+	enc_Direccion.innerHTML = "Direccion";
+	encaDeposito.appendChild(enc_Direccion);
 
-	var callback = function(responseAcarreos)
-	{
-		//PEDIDO DEL ACARREO
-		var acarreo = responseAcarreos.acarreo;
+	var enc_Telefono = document.createElement("td");
+	enc_Telefono.innerHTML = "Telefono";
+	encaDeposito.appendChild(enc_Telefono);
 
-		drawer.drawTowTruckInMap(acarreo, map);
-    };
+	var enc_Horarios = document.createElement("td");
+	enc_Horarios.innerHTML = "Horarios";
+	encaDeposito.appendChild(enc_Horarios);
 
-	asyncQuery(url + '/' + patente + urlAcarreo + idInfraccion, callback);
+	//Agrega la fila al final de la tabla (al final del elemento tblbody)
+	tblBody.appendChild(encaDeposito);
+}
+
+function CrearTDeposito(responseDepositos)
+{
+	//Obtener la referencia del elemento
+	var body = document.getElementById("tDepositos");
+
+	var tabla   = document.createElement("table");
+	var tblBody = document.createElement("tbody");
+
+	CrearEncabezadoTDeposito(tblBody);
+	var fila = document.createElement("tr");
+		
+	var celda1 = document.createElement("td");
+	celda1.innerHTML = responseDepositos.nombre;
+	fila.appendChild(celda1);
+		
+	var celda2 = document.createElement("td");
+	celda2.innerHTML = responseDepositos.direccion;
+	fila.appendChild(celda2);
+
+	var celda3 = document.createElement("td");
+	celda3.innerHTML = responseDepositos.telefono;
+	fila.appendChild(celda3);
+
+	var celda4 = document.createElement("td");
+	celda4.innerHTML = responseDepositos.horarios;
+	fila.appendChild(celda4);
+		
+	//Agrega la fila al final de la tabla
+	tblBody.appendChild(fila);
+	
+	//Posiciona el <tbody> debajo del elemento <table>
+	tabla.appendChild(tblBody);
+	  
+	//Anexa la tabla dentro del elemento
+	body.appendChild(tabla);
+	
+	tabla.setAttribute('class', 'table');
 }
 
 /******************************************************************************
@@ -191,55 +259,7 @@ function mostrarDepositoInfraccion(patente, idInfraccion)
  */
 var start = function()
 {
-
-    mostrarDepositoInfraccion('ABC123', '42');
-
+    map = createMap('mapid');
 };
 
 $(start);
-
-/*function generaTablaInfraccion()
-{
-  //Obtener la referencia del elemento
-  var body = document.getElementById("tablaInfracciones");
- 
-  //Crea un elemento <table> y un elemento <tbody>
-  var tabla   = document.createElement("table");
-  var tblBody = document.createElement("tbody");
- 
-  for (var i = 0; i < 2; i++)
-  {
-    //Crea las filas de la tabla
-    var fila = document.createElement("tr");
- 
-    for (var j = 0; j < 2; j++)
-    {
-      //Crea un elemento <td> y un nodo de texto
-      var celda = document.createElement("td");
-	  celda.innerHTML ='HOLA';
-
-      //var textoCelda = document.createTextNode("<a>link text</a>");
-	  
-      //appendChild(textoCelda);
-      fila.appendChild(celda);
-    }
-	
-	//CAMBIAR BOTON POR LINK
-	var verInfraccion = document.createElement("a");
-	verInfraccion.innerHTML="asd";
-	verInfraccion.href="www.google.com";
-	celda.appendChild(verInfraccion);
- 
-    //Agrega la fila al final de la tabla (al final del elemento tblbody)
-    tblBody.appendChild(fila);
-  }
- 
-  //Posiciona el <tbody> debajo del elemento <table>
-  tabla.appendChild(tblBody);
-  
-  //Anexa la tabla dentro del elemento
-  body.appendChild(tabla);
-  
-  //Modifica el atributo "border" de la tabla y lo fija a "2";
-  tabla.setAttribute("border", "1");
-}*/
